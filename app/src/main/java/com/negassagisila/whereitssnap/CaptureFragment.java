@@ -38,6 +38,7 @@ import java.util.Date;
 public class CaptureFragment extends Fragment implements LocationListener{
     private final static int CAMERA_REQUEST = 123;
 
+    @NonNull
     private ImageView mImageView;
 
     //the file path for the photo
@@ -129,6 +130,12 @@ public class CaptureFragment extends Fragment implements LocationListener{
                         //set the new object to our DataManager
                         mDataManager.addPhoto(photo);
                         Toast.makeText(getActivity(), "Saved", Toast.LENGTH_LONG).show();
+
+                        mEditTextTitle.getText().clear();
+                        mEditTextTag1.getText().clear();
+                        mEditTextTag2.getText().clear();
+                        mEditTextTag3.getText().clear();
+                        mImageView.setImageURI(Uri.parse(Uri.EMPTY.toString()));
                     } else {
                         //no image
                         Toast.makeText(getActivity(), "No image to save", Toast.LENGTH_LONG).show();
