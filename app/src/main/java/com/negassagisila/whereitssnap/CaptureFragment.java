@@ -31,15 +31,23 @@ import java.util.Date;
 
 public class CaptureFragment extends Fragment {
     private final static int CAMERA_REQUEST = 123;
+
     private ImageView mImageView;
+
     //the file path for the photo
     String mCurrentPhotoPath;
+
     //where the captured image is stored
     private Uri mImageUri = Uri.EMPTY;
+
+    //a reference to our database
+    private DataManager mDataManager;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mDataManager = new DataManager(getActivity().getApplicationContext());
     }
 
     @Nullable
@@ -66,7 +74,7 @@ public class CaptureFragment extends Fragment {
                 try{
                     photoFile = createImageFile();
                 } catch (IOException iex) {
-                    //error occured while creating the File
+                    //error occurred while creating the File
                     Log.e("error", "error creating file");
                 }
                 //continue only if the File was successfully created
@@ -81,9 +89,37 @@ public class CaptureFragment extends Fragment {
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getActivity(), "Not yet, give it a little bit of time", Toast.LENGTH_SHORT).show();
+                if (mImageUri != null) {
+                    if (!mImageUri.equals(Uri.EMPTY)) {
+                        //we have a photo to save
+                        Photo photo = new Photo();
+                        photo.setTitle(mEditTextTitle.getText().toString());
+                        photo.setStorageLocation(mImageUri);
+
+                        //what is in the tags
+                        String tag1 = mEditTextTag1.getText().toString();
+                        String tag2 = mEditTextTag2.getText().toString();
+                        String tag3 = mEditTextTag3.getText().toString();
+
+                        //assign the strings to the Photo object
+                        photo.setTag1(tag1);
+                        photo.setTag2(tag2);
+                        photo.setTag3(tag3);
+
+                        //set the new object to our DataManager
+                        mDataManager.addPhoto(photo);
+                        Toast.makeText(getActivity(), "Saved", Toast.LENGTH_LONG).show();
+                    } else {
+                        //no image
+                        Toast.makeText(getActivity(), "No image to save", Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    //uri not initialized
+                    Log.e("Error ", "URI is null");
+                }
             }
         });
+
         return view;
     }
 

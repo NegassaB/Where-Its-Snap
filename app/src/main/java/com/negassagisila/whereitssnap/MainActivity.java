@@ -15,12 +15,15 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ActivityComs {
     private ListView mNavDrawerList;
     private DrawerLayout mDrawerLayout;
     private ArrayAdapter<String> mAdapter;
     private ActionBarDrawerToggle mDrawerToggle;
     private String mActivityTitle;
+
+    public DataManager dataManager;
+
 
     private void switchFragment(int position) {
 
@@ -77,6 +80,7 @@ public class MainActivity extends AppCompatActivity {
             public void onDrawerClosed(View drawerView) {
                 super.onDrawerClosed(drawerView);
 
+                assert getSupportActionBar() != null;
                 getSupportActionBar().setTitle(mActivityTitle);
 
                 //triggers call to onPrepareOptionsMenu()
@@ -138,13 +142,16 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
-        return super.onOptionsItemSelected(item);
+        //return super.onOptionsItemSelected(item);
+        return mDrawerToggle.onOptionsItemSelected(item) || super.onOptionsItemSelected(item);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        dataManager = new DataManager(getApplicationContext());
 
         mNavDrawerList = findViewById(R.id.navList);
         mDrawerLayout = findViewById(R.id.drawerLayout);
@@ -172,5 +179,55 @@ public class MainActivity extends AppCompatActivity {
         });
 
         switchFragment(0);
+    }
+
+    @Override
+    public void onTagsListItemSelected(String clickedTag) {
+        //we have just received a String for the TitlesFragment
+
+        //prepare a new Bundle
+        Bundle args = new Bundle();
+
+        //pack the string into the Bundle
+        args.putString("Tag", clickedTag);
+
+        //create a new instance of the TitlesFragment
+        TitlesFragment titlesFragment = new TitlesFragment();
+
+        //load the bundle into the fragment
+        titlesFragment.setArguments(args);
+
+        //start the fragment
+        FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction().replace(R.id.fragmentHolder, titlesFragment, "TAGS").commit();
+
+        //update selected item and title, then close the drawer
+        mNavDrawerList.setItemChecked(1, true);
+        mNavDrawerList.setSelection(1);
+        mDrawerLayout.closeDrawer(mNavDrawerList);
+    }
+
+    //open viewFragment with the photo indicated by position
+    @Override
+    public void onTitlesListItemSelected(int position) {
+
+        //instantiate and load up the Bundle with the row _id
+        Bundle args = new Bundle();
+        args.putInt("Position", position);
+
+        //create the fragment and add the bundle
+        ViewFragment viewFragment = new ViewFragment();
+        viewFragment.setArguments(args);
+
+        //start the fragment
+        /*FragmentManager fragmentManager = getFragmentManager();
+        fragmentManager.beginTransaction().replace(R.id.fragmentHolder, viewFragment, "VIEW").commit();*/
+        getFragmentManager().beginTransaction().replace(R.id.fragmentHolder, viewFragment, "VIEW").commit();
+
+        //update the selected item and title, then close the drawer
+        mNavDrawerList.setItemChecked(1, true);
+        mNavDrawerList.setSelection(1);
+        //setTitle(navMenuTitles(position));
+        mDrawerLayout.closeDrawer(mNavDrawerList);
     }
 }
