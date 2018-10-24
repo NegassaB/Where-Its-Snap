@@ -1,8 +1,14 @@
 package com.negassagisila.whereitssnap;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.BitmapDrawable;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -29,7 +35,7 @@ import java.util.Date;
  * Created by Negassa Berhanu on 9/2/18.
  */
 
-public class CaptureFragment extends Fragment {
+public class CaptureFragment extends Fragment implements LocationListener{
     private final static int CAMERA_REQUEST = 123;
 
     private ImageView mImageView;
@@ -43,11 +49,21 @@ public class CaptureFragment extends Fragment {
     //a reference to our database
     private DataManager mDataManager;
 
+    //for the location
+    private Location mLocation = new Location("");
+    private LocationManager mLocationManager;
+    private String mProvider;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         mDataManager = new DataManager(getActivity().getApplicationContext());
+
+        //initialize mLocationManager
+        mLocationManager = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
+        Criteria criteria = new Criteria();
+        mProvider = mLocationManager.getBestProvider(criteria, false);
     }
 
     @Nullable
@@ -86,6 +102,7 @@ public class CaptureFragment extends Fragment {
             }
         });
 
+        //listen for clicks on the save button
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -95,6 +112,9 @@ public class CaptureFragment extends Fragment {
                         Photo photo = new Photo();
                         photo.setTitle(mEditTextTitle.getText().toString());
                         photo.setStorageLocation(mImageUri);
+
+                        //set the current GPS location
+                        photo.setGpsLocation(mLocation);
 
                         //what is in the tags
                         String tag1 = mEditTextTag1.getText().toString();
@@ -159,5 +179,43 @@ public class CaptureFragment extends Fragment {
         BitmapDrawable bd = (BitmapDrawable) mImageView.getDrawable();
         bd.getBitmap().recycle();
         mImageView.setImageBitmap(null);
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        //update the location if it changed
+        mLocation = location;
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+
+    }
+
+    //start updates when the app starts/resumes
+    @SuppressLint("MissingPermission")
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        mLocationManager.requestLocationUpdates(mProvider, 500, 1, this);
+    }
+
+    //pause the location manager when the app is paused/stopped
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        mLocationManager.removeUpdates(this);
     }
 }
